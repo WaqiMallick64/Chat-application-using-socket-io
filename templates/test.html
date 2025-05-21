@@ -1,0 +1,327 @@
+<style>
+   body {
+      font-family: "Inter", sans-serif;
+    }
+    /* Scrollbar for chat list and messages */
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 10px;
+    }
+    /* Remove background color from dropdown behind file option */
+    #insertOptions {
+      background-color: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+    #insertOptions button {
+      background-color: #3b82f6 !important;
+      padding: 0.75rem !important;
+      border-radius: 9999px !important;
+      box-shadow: 0 0 10px rgb(59 130 246 / 0.5);
+      margin-bottom: 0.5rem !important;
+      transition: background-color 0.3s ease;
+      width: 44px !important;
+      height: 44px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    #insertOptions button:last-child {
+      margin-bottom: 0 !important;
+    }
+    #insertOptions button:hover {
+      background-color: #2563eb !important;
+    }
+    /* Chat header background and full-width bottom border */
+    .chat-header-wrapper {
+      margin-left: -1.5rem;
+      margin-right: -1.5rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+      background-color: #fafcff;
+      border-bottom: 1px solid #e2e8f0;
+      position: relative;
+    }
+    .chat-header {
+      padding-top: 0;
+      padding-bottom: 1.5rem;
+      margin-bottom: 0;
+    }
+    /* Header icons container */
+    .header-icons {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .header-icon-btn {
+      background-color: #f1f5f9;
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      border: none;
+      color: #475569;
+      font-size: 1rem;
+    }
+    .header-icon-btn:hover {
+      background-color: #e2e8f0;
+      color: #1e40af;
+    }
+    /* Message time style */
+    .message-time {
+      font-size: 8px;
+      color: #94a3b8;
+      margin-top: 2px;
+      text-align: right;
+      user-select: none;
+    }
+    /* Image message style */
+    .message-image-container {
+      background-color: #f1f5f9;
+      border-radius: 0.5rem;
+      padding: 0.25rem;
+      max-width: 180px;
+      margin-bottom: 0.25rem;
+      position: relative;
+      display: inline-block;
+    }
+    .message-image {
+      width: 100%;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      display: block;
+    }
+    .message-image:hover {
+      transform: scale(1.05);
+    }
+    /* File message style */
+    .message-file {
+      background-color: #3b82f6;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      max-width: 280px;
+    }
+    .message-file i {
+      font-size: 16px;
+    }
+    /* Image preview container */
+    #imagePreviewContainer {
+      max-width: 180px;
+      margin-bottom: 0.5rem;
+      position: relative;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    #imagePreviewContainer img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+      position: relative;
+    }
+    .removeImageBtn {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s ease;
+      z-index: 10;
+    }
+    .removeImageBtn:hover {
+      background: rgba(0,0,0,0.9);
+    }
+  </style>
+
+   <!-- Chats List -->
+   
+    <div class="flex justify-between items-center mb-6">
+     <div>
+      <h2 class="text-[#1e293b] font-semibold text-lg">
+       Chats
+      </h2>
+      
+      <!--recent chats start-->
+      
+      <button aria-label="Recent Chats dropdown" class="text-xs text-[#475569] flex items-center space-x-1"
+         id="recentChatsBtn">
+          <span>
+            Recent Chats
+          </span>
+          <i class="fas fa-chevron-down text-[10px]">
+          </i>
+        </button>
+        <div aria-labelledby="recentChatsBtn" class="dropdown-menu rounded-lg" id="recentChatsDropdown" role="menu">
+          <ul>
+            <li tabindex="0">
+              Last 30 days
+            </li>
+            <li tabindex="0">
+              Last 60 days
+            </li>
+            <li tabindex="0">
+              All time
+            </li>
+            <li tabindex="0">
+              More options
+            </li>
+          </ul>
+        </div>
+      
+      <!--recent chats end-->
+     </div>
+     
+     <div class="dropdown relative mb-4">
+        <button id="adminDropdownButton" class="bg-[#3b82f6] text-white text-xs font-semibold px-4 py-2 rounded shadow-md hover:bg-[#2563eb] transition">
+            + Create New Chat
+           </button>
+        <div id="adminDropdownMenu" class="hidden absolute mt-2 bg-white border rounded shadow-md z-50">
+          <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left" data-admin="Billing Support">Billing Support</button>
+          <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left" data-admin="Technical Support">Technical Support</button>
+          <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left" data-admin="Account Manager">Account Manager</button>
+          <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left" data-admin="Sales Rep">Sales Rep</button>
+          <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left" data-admin="HR">HR</button>
+        </div>
+      </div> 
+    </div>
+    <!-- Search and Messages filter -->
+    <div class="flex border border-[#e2e8f0] rounded-md overflow-hidden mb-6">
+     <div class="flex items-center flex-1 px-3 bg-white">
+      <i class="fas fa-search text-[#94a3b8] text-sm">
+      </i>
+      <input class="w-full text-xs text-[#475569] placeholder-[#94a3b8] py-2 px-2 focus:outline-none" placeholder="Search" type="text"/>
+     </div>
+     <button aria-label="Messages filter dropdown" class="bg-white border-l border-[#e2e8f0] text-xs text-[#475569] px-4 py-2 flex items-center space-x-1"
+     id="messagesFilterBtn">
+      <span>
+       Messages
+      </span>
+      <i class="fas fa-chevron-down text-[10px]">
+      </i>
+     </button>
+      <div aria-labelledby="messagesFilterBtn" class="dropdown-menu rounded-lg" id="messagesFilterDropdown"
+        role="menu">
+        <ul>
+          <li tabindex="0">
+            All Messages
+          </li>
+          <li tabindex="0">
+            Unread
+          </li>
+          <li tabindex="0">
+            Starred
+          </li>
+          <li tabindex="0">
+            Archived
+          </li>
+        </ul>
+      </div>
+    </div>
+ 
+
+
+
+<!-- my-->
+      
+<div class="flex justify-between items-center mb-1">
+    <h2 class="text-[#1e293b] font-semibold text-lg">
+      Chats
+    </h2>
+    
+                
+    <div class="dropdown relative">
+      
+      <button aria-label="Messages filter dropdown"
+        class="bg-white border border-[#e2e8f0] text-xs text-[#475569] px-4 py-2 flex items-center space-x-1 rounded focus:outline-none"
+        id="messagesFilterBtn">
+        <span>
+          Messages
+        </span>
+        <i class="fas fa-chevron-down text-[10px]">
+        </i>
+      </button>
+      <div aria-labelledby="messagesFilterBtn" class="dropdown-menu rounded-lg" id="messagesFilterDropdown"
+        role="menu">
+        <ul>
+          <li tabindex="0">
+            All Messages
+          </li>
+          <li tabindex="0">
+            Unread
+          </li>
+          <li tabindex="0">
+            Starred
+          </li>
+          <li tabindex="0">
+            Archived
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown relative mb-6 w-max">
+    <button aria-label="Recent Chats dropdown"
+      class="text-xs text-[#475569] flex items-center space-x-1 focus:outline-none" id="recentChatsBtn">
+      <span>
+        Recent Chats
+      </span>
+      <i class="fas fa-chevron-down text-[10px]">
+      </i>
+    </button>
+    <div aria-labelledby="recentChatsBtn" class="dropdown-menu rounded-lg" id="recentChatsDropdown" role="menu">
+      <ul>
+        <li tabindex="0">
+          Last 30 days
+        </li>
+        <li tabindex="0">
+          Last 60 days
+        </li>
+        <li tabindex="0">
+          All time
+        </li>
+        <li tabindex="0">
+          More options
+        </li>
+      </ul>
+    </div>
+  </div>
+  <!-- Search bar -->
+  <div class="flex border border-[#e2e8f0] rounded-md overflow-hidden mb-6">
+    <div class="flex items-center flex-1 px-3 bg-white">
+      <i class="fas fa-search text-[#94a3b8] text-sm">
+      </i>
+      <input class="w-full text-xs text-[#475569] placeholder-[#94a3b8] py-2 px-2 focus:outline-none"
+        placeholder="Search" type="text" />
+    </div>
+  </div>

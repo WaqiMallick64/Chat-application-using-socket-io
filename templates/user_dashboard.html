@@ -1,0 +1,1196 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <title>
+    Chat UI with More Chats and Vertical Scroll
+  </title>
+  <link rel="stylesheet" href="{{url_for('static', filename = 'css/styles.css')}}">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+    }
+
+    /* Scrollbar for chat list and messages */
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    /* Remove background color from dropdown behind file option */
+    #insertOptions {
+      background-color: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    #insertOptions button {
+      background-color: #3b82f6 !important;
+      padding: 0.75rem !important;
+      border-radius: 9999px !important;
+      box-shadow: 0 0 10px rgb(59 130 246 / 0.5);
+      margin-bottom: 0.5rem !important;
+      transition: background-color 0.3s ease;
+      width: 44px !important;
+      height: 44px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    #insertOptions button:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    #insertOptions button:hover {
+      background-color: #2563eb !important;
+    }
+
+    /* Chat header background and full-width bottom border */
+    .chat-header-wrapper {
+      margin-left: -1.5rem;
+      margin-right: -1.5rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+      background-color: #fafcff;
+      border-bottom: 1px solid #e2e8f0;
+      position: relative;
+    }
+
+    .chat-header {
+      padding-top: 0;
+      padding-bottom: 1.5rem;
+      margin-bottom: 0;
+    }
+
+    /* Header icons container */
+    .header-icons {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .header-icon-btn {
+      background-color: #f1f5f9;
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      border: none;
+      color: #475569;
+      font-size: 1rem;
+    }
+
+    .header-icon-btn:hover {
+      background-color: #e2e8f0;
+      color: #1e40af;
+    }
+
+    /* Message time style */
+    .message-time {
+      font-size: 8px;
+      color: #94a3b8;
+      margin-top: 2px;
+      text-align: right;
+      user-select: none;
+    }
+
+    /* Image message style */
+    .message-image-container {
+      background-color: #f1f5f9;
+      border-radius: 0.5rem;
+      padding: 0.25rem;
+      max-width: 180px;
+      margin-bottom: 0.25rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .message-image {
+      width: 100%;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      display: block;
+    }
+
+    .message-image:hover {
+      transform: scale(1.05);
+    }
+
+    /* File message style */
+    .message-file {
+      background-color: #3b82f6;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      max-width: 280px;
+    }
+
+    .message-file i {
+      font-size: 16px;
+    }
+
+    /* Image preview container */
+    #imagePreviewContainer {
+      max-width: 180px;
+      margin-bottom: 0.5rem;
+      position: relative;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    #imagePreviewContainer img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+      position: relative;
+    }
+
+    .removeImageBtn {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s ease;
+      z-index: 10;
+    }
+
+    .removeImageBtn:hover {
+      background: rgba(0, 0, 0, 0.9);
+    }
+
+    /* Dropdown base style */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 0.5rem;
+      min-width: 12rem;
+      background: rgba(255 255 255 / 0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+        0 4px 6px -4px rgb(0 0 0 / 0.1);
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .dropdown-menu.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .dropdown-menu ul {
+      list-style: none;
+      padding: 0.5rem 0;
+      margin: 0;
+    }
+
+    .dropdown-menu li {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: #1e293b;
+      transition: background-color 0.2s ease;
+    }
+
+    .dropdown-menu li:hover {
+      background-color: #e0e7ff;
+    }
+
+    /* Chats list scroll container */
+    #chatItemsContainer {
+      max-height: 420px;
+      /* approx 5 chats height */
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
+    #chatItemsContainer::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chatItemsContainer::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #chatItemsContainer::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body class="bg-[#e9f0fb] min-h-screen flex items-center justify-center p-4">
+  <div
+    class="max-w-[1200px] w-full bg-[#f9fcff] rounded-2xl flex flex-col md:flex-row shadow-[0_0_30px_#d9e6f7] overflow-hidden"
+    style="height: 720px">
+    <!-- Left Sidebar -->
+    <aside class="bg-[#f0f6ff] w-full md:w-[280px] flex flex-col justify-between p-6 rounded-l-2xl">
+      <div>
+        <div class="flex items-center space-x-3 mb-10">
+          <img alt="Black and white portrait of Henry Jabbawockiez with glasses side view"
+            class="rounded-full w-12 h-12 object-cover" height="48"
+            src="{{url_for('static', filename = 'images/no-prof.jpg')}}" width="48" />
+          <div class="dropdown relative flex flex-col">
+            <button aria-label="User menu"
+              class="text-sm font-semibold text-[#1f2937] flex items-center space-x-1 focus:outline-none"
+              id="accountBtn">
+              <span>
+                {{ current_admin.username | capitalize }}
+
+              </span>
+              <i class="fas fa-chevron-down text-xs">
+              </i>
+            </button>
+            <div aria-labelledby="accountBtn" class="dropdown-menu rounded-lg" id="accountDropdown" role="menu">
+              <ul>
+                <li tabindex="0">
+                  Profile
+                </li>
+                <li tabindex="0">
+                  Settings
+                </li>
+                <li tabindex="0">
+                  Logout
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <nav class="flex flex-col space-y-6 text-sm font-semibold text-[#475569]">
+          <a class="flex items-center space-x-3 hover:text-[#3b82f6] transition-colors" href="#">
+            <i class="fas fa-th-large text-lg">
+            </i>
+            <span>
+              HOME
+            </span>
+          </a>
+          <a class="flex items-center space-x-3 text-[#3b82f6] font-semibold" href="#">
+            <i class="fas fa-comment-alt text-lg">
+            </i>
+            <span>
+              CHAT
+            </span>
+            <div class="badge-container">
+              {% if total_unread_chats > 0 %}
+              <span id="totalUnreadBadge" class="message-count bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                  {{ total_unread_chats }}
+              </span>
+              {% endif %}
+          </div>
+          </a>
+          <a class="flex items-center space-x-3 hover:text-[#3b82f6] transition-colors" href="#">
+            <i class="fas fa-user text-lg">
+            </i>
+            <span>
+              CONTACT
+            </span>
+          </a>
+          <a class="flex items-center space-x-3 hover:text-[#3b82f6] transition-colors" href="#">
+            <i class="fas fa-bell text-lg">
+            </i>
+            <span>
+              NOTIFICATIONS
+            </span>
+          </a>
+          <a class="flex items-center space-x-3 hover:text-[#3b82f6] transition-colors" href="#">
+            <i class="fas fa-calendar-alt text-lg">
+            </i>
+            <span>
+              CALENDAR
+            </span>
+          </a>
+          <a class="flex items-center space-x-3 hover:text-[#3b82f6] transition-colors" href="#">
+            <i class="fas fa-cog text-lg">
+            </i>
+            <span>
+              SETTINGS
+            </span>
+          </a>
+        </nav>
+      </div>
+      <button
+        class="flex items-center space-x-3 text-[#475569] text-sm font-semibold hover:text-[#3b82f6] transition-colors">
+        <i class="fas fa-power-off text-lg">
+        </i>
+        <span>
+          <a href="{{ url_for('user_logout') }}">LOG OUT</a>
+        </span>
+      </button>
+    </aside>
+    <!-- Chats List -->
+    <section class="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300">
+      <div class="flex justify-between items-center mb-1">
+        <h2 class="text-[#1e293b] font-semibold text-lg">
+          Chats
+        </h2>
+
+        <div class="dropdown relative mb-4">
+          <button id="adminDropdownButton"
+            class="bg-[#3b82f6] text-white text-xs font-semibold px-4 py-2 rounded shadow-md hover:bg-[#2563eb] transition">
+            + Create New Chat
+          </button>
+          <div id="adminDropdownMenu" class="hidden absolute mt-2 bg-white border rounded shadow-md z-50">
+            <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left"
+              data-admin="Billing Support">Billing Support</button>
+            <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left"
+              data-admin="Technical Support">Technical Support</button>
+            <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left"
+              data-admin="Account Manager">Account Manager</button>
+            <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left" data-admin="Sales Rep">Sales
+              Rep</button>
+            <button class="admin-option block px-4 py-2 hover:bg-gray-200 w-full text-left" data-admin="HR">HR</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="dropdown relative mb-6 w-max">
+        <button aria-label="Recent Chats dropdown"
+          class="text-xs text-[#475569] flex items-center space-x-1 focus:outline-none" id="recentChatsBtn">
+          <span>
+            Recent Chats
+          </span>
+          <i class="fas fa-chevron-down text-[10px]">
+          </i>
+        </button>
+        <div aria-labelledby="recentChatsBtn" class="dropdown-menu rounded-lg" id="recentChatsDropdown" role="menu">
+          <ul>
+            <li tabindex="0">
+              Last 30 days
+            </li>
+            <li tabindex="0">
+              Last 60 days
+            </li>
+            <li tabindex="0">
+              All time
+            </li>
+            <li tabindex="0">
+              More options
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- Search bar -->
+      <div class="flex border border-[#e2e8f0] rounded-md overflow-hidden mb-6">
+        <div class="flex items-center flex-1 px-3 bg-white">
+          <i class="fas fa-search text-[#94a3b8] text-sm">
+          </i>
+          <input class="w-full text-xs text-[#475569] placeholder-[#94a3b8] py-2 px-2 focus:outline-none"
+            placeholder="Search" type="text" />
+        </div>
+        <button aria-label="Messages filter dropdown"
+          class="bg-white border-l border-[#e2e8f0] text-xs text-[#475569] px-4 py-2 flex items-center space-x-1"
+          id="messagesFilterBtn">
+          <span>
+            Messages
+          </span>
+          <i class="fas fa-chevron-down text-[10px]">
+          </i>
+        </button>
+        <div aria-labelledby="messagesFilterBtn" class="dropdown-menu rounded-lg" id="messagesFilterDropdown"
+          role="menu">
+          <ul>
+            <li tabindex="0">
+              All Messages
+            </li>
+            <li tabindex="0">
+              Unread
+            </li>
+            <li tabindex="0">
+              Starred
+            </li>
+            <li tabindex="0">
+              Archived
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- Chat items container with vertical scroll -->
+      <div class="space-y-6" id="chatItemsContainer">
+        {% if user_chats %}
+        {% for chat in user_chats %}
+        <div class="bg-white rounded-lg shadow-[0_0_15px_#d9e6f7] p-4 flex flex-col cursor-pointer"
+          data-room-id="{{ chat['room_id'] }}" data-user-name="{{ chat.user }}" style="max-width: 100%">
+          <div class="flex justify-between items-start">
+            <div class="flex items-center space-x-3">
+              <img alt="Avatar" class="rounded-full w-10 h-10 object-cover" height="40"
+                src="{{url_for('static', filename = 'images/no-prof.png')}}" width="40" />
+              <div>
+                <h3 class="text-sm font-semibold text-[#1e293b] flex items-center space-x-1">
+                  <span>
+                    {{ chat['user'] }}
+                  </span>
+                  <span class="text-xs text-[#3b82f6] font-normal">
+                    message
+                  </span>
+                </h3>
+                <p class="text-[10px] text-[#64748b] max-w-[280px] leading-[14px] mt-1">
+                  {% if chat.last_message_read %}
+                  {{ chat.last_sender }}: {{ chat.last_message }}
+                  {% else %}
+                  <span class="text-black font-bold tracking-tight">{{ chat.last_sender }}: {{ chat.last_message
+                    }}</span>
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-col items-end space-y-1">
+              <span class="text-[10px] text-[#94a3b8]">
+                <span class="chat-time" data-time="{{ chat.last_time }}"></span>
+              </span>
+
+              {% if chat.unread_count > 0 %}
+              <div
+                class="bg-[#ef476f] text-white text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center unread-badge">
+                {{ chat.unread_count }}
+              </div>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>No active chats yet.</p>
+        {% endif %}
+      </div>
+    </section>
+    <!-- Chat Messages -->
+    <section
+      class="flex-1 bg-white rounded-r-2xl p-6 flex flex-col shadow-[0_0_30px_#d9e6f7] max-w-[600px] relative hidden"
+      id="rightPanel">
+      <!-- Header wrapper for full width border -->
+      <div class="chat-header-wrapper">
+        <div class="chat-header flex justify-between items-center">
+          <div class="flex items-center space-x-3" id="chatHeaderInfo">
+            <img alt="Avatar" class="rounded-full w-10 h-10 object-cover" height="40"
+              src="{{url_for('static', filename = 'images/no-prof.png')}}" width="40" />
+            <div>
+              <h3 class="text-sm font-semibold text-[#1e293b]" id="chatHeaderName">
+                Nika Jerrardo
+              </h3>
+              <p class="text-[10px] text-[#3b82f6] font-normal mt-0.5" id="chatHeaderStatus">
+                last online 5 hours ago
+              </p>
+            </div>
+          </div>
+          <div class="header-icons">
+            <button aria-label="Attach file" class="header-icon-btn" id="clipBtn" tabindex="0" type="button">
+              <i class="fas fa-paperclip">
+              </i>
+            </button>
+            <!-- <button aria-label="More options" class="header-icon-btn" id="moreBtn" tabindex="0" type="button">
+              <i class="fas fa-ellipsis-v">
+              </i>
+            </button>-->
+            <button aria-label="Close chat" class="header-icon-btn text-bold" id="closeChatBtn" tabindex="0"
+              type="button">
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Messages container -->
+      <div
+        class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 space-y-4 px-2 flex flex-col mt-6"
+        id="messagesContainer">
+        <p class="text-center text-gray-400 text-xs mt-10 select-none" id="emptyChatText">
+          Select a chat to start messaging
+        </p>
+      </div>
+      <!-- Image preview container -->
+      <div class="hidden relative flex flex-wrap gap-2 mb-2" id="imagePreviewContainer">
+      </div>
+      <!-- Input area -->
+      <form class="flex items-center space-x-3 border-t border-[#e2e8f0] pt-3 mt-3 relative" id="chatForm">
+        <div class="relative z-20">
+          <button aria-label="Toggle insert options"
+            class="bg-[#3b82f6] text-white p-3 rounded-full hover:bg-[#2563eb] transition focus:outline-none"
+            id="toggleOptionsBtn" type="button">
+            <i class="fas fa-plus">
+            </i>
+          </button>
+          <div aria-label="Insert options"
+            class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 flex flex-col bg-transparent p-0 opacity-0 pointer-events-none scale-90 transition-all duration-300 z-30"
+            id="insertOptions" style="min-width: 44px">
+            <button aria-label="Insert file"
+              class="text-white rounded-full mb-2 last:mb-0 shadow-[0_0_10px_rgba(59,130,246,0.5)] bg-[#3b82f6] hover:bg-[#2563eb] transition"
+              id="fileBtn" type="button">
+              <i class="fas fa-file-alt text-lg flex items-center justify-center w-6 h-6">
+              </i>
+            </button>
+            <button aria-label="Insert image"
+              class="text-white rounded-full mb-2 last:mb-0 shadow-[0_0_10px_rgba(59,130,246,0.5)] bg-[#3b82f6] hover:bg-[#2563eb] transition"
+              id="imageBtn" type="button">
+              <i class="fas fa-image text-lg flex items-center justify-center w-6 h-6">
+              </i>
+            </button>
+            <button aria-label="Insert document"
+              class="text-white rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] bg-[#3b82f6] hover:bg-[#2563eb] transition"
+              disabled="" type="button">
+              <i class="fas fa-copy text-lg flex items-center justify-center w-6 h-6 opacity-50 cursor-not-allowed"
+                title="Not implemented">
+              </i>
+            </button>
+          </div>
+        </div>
+        <input autocomplete="off"
+          class="flex-1 text-xs text-[#475569] placeholder-[#94a3b8] border border-[#e2e8f0] rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+          id="chatInput" placeholder="Type a message here" type="text" />
+        <button aria-label="Send message" class="bg-[#3b82f6] text-white p-3 rounded-full hover:bg-[#2563eb] transition"
+          type="submit" id="sendBtn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+      <!-- Hidden file inputs -->
+      <input accept="image/*" class="hidden" id="imageInput" multiple="" type="file" />
+      <input class="hidden" id="fileInput" multiple="" type="file" />
+    </section>
+  </div>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    let socket;
+    let activeRoomId = null;
+    let activeUserName = null;
+
+    const toggleBtn = document.getElementById("toggleOptionsBtn");
+    const insertOptions = document.getElementById("insertOptions");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const messagesContainer = document.getElementById("messagesContainer");
+    const emptyChatText = document.getElementById("emptyChatText");
+    const chatHeaderName = document.getElementById("chatHeaderName");
+    const chatHeaderStatus = document.getElementById("chatHeaderStatus");
+    const imageInput = document.getElementById("imageInput");
+    const fileInput = document.getElementById("fileInput");
+    const fileBtn = document.getElementById("fileBtn");
+    const imageBtn = document.getElementById("imageBtn");
+    const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+    const rightPanel = document.getElementById("rightPanel");
+    const closeChatBtn = document.getElementById("closeChatBtn");
+
+    // Dropdowns
+    const accountBtn = document.getElementById("accountBtn");
+    const accountDropdown = document.getElementById("accountDropdown");
+
+    const recentChatsBtn = document.getElementById("recentChatsBtn");
+    const recentChatsDropdown = document.getElementById("recentChatsDropdown");
+
+    const messagesFilterBtn = document.getElementById("messagesFilterBtn");
+    const messagesFilterDropdown = document.getElementById("messagesFilterDropdown");
+
+    const adminDropdownButton = document.getElementById('adminDropdownButton');
+    const adminDropdownMenu = document.getElementById('adminDropdownMenu');
+
+
+    // Close dropdowns
+    function closeAllDropdowns() {
+      accountDropdown.classList.remove("show");
+      recentChatsDropdown.classList.remove("show");
+      messagesFilterDropdown.classList.remove("show");
+      adminDropdownMenu.classList.add("hidden"); // Also close adminDropdownMenu
+    }
+
+
+    function toggleDropdown(dropdown) {
+      const isShown = dropdown.classList.contains("show");
+      closeAllDropdowns();
+      if (!isShown) dropdown.classList.add("show");
+    }
+
+
+    accountBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleDropdown(accountDropdown); });
+    recentChatsBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleDropdown(recentChatsDropdown); });
+    messagesFilterBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleDropdown(messagesFilterDropdown); });
+    adminDropdownButton.addEventListener('click', (e) => {
+      e.stopPropagation(); // Important to stop click bubbling
+      const isHidden = adminDropdownMenu.classList.contains('hidden');
+      closeAllDropdowns();
+      if (isHidden) {
+        adminDropdownMenu.classList.remove('hidden');
+      }
+    });
+
+    document.addEventListener("click", closeAllDropdowns);
+
+
+    // DOM Ready
+    document.addEventListener('DOMContentLoaded', function () {
+      socket = io.connect("http://127.0.0.1:5000");
+
+
+
+
+
+      document.querySelectorAll('.admin-option').forEach(button => {
+        button.addEventListener('click', function () {
+          const selectedAdminType = this.getAttribute('data-admin');
+
+          fetch(`/check_or_create_room/${encodeURIComponent(selectedAdminType)}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                const roomId = data.room_id;
+                openChatBox(roomId, selectedAdminType);
+                updateChatList(); // Refresh the chat list after creating a new room
+              } else {
+                alert('Error checking/creating room');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+
+          adminDropdownMenu.classList.add('hidden');
+        });
+      });
+
+
+
+      document.querySelectorAll('#chatItemsContainer [data-room-id]').forEach(function (chatItem) {
+        chatItem.addEventListener('click', function () {
+          const roomId = this.getAttribute('data-room-id');
+          const userName = this.getAttribute('data-user-name');
+          //alert(`querySelectorAll#chatItems: roomid: ${roomId}`);
+          openChatBox(roomId, userName);
+        });
+      });
+
+      function openChatBox(roomId, userName) {
+        activeRoomId = roomId;
+        activeUserName = userName;
+        clearMessages();
+        emptyChatText.style.display = 'none';
+        chatHeaderName.textContent = userName;
+        chatHeaderStatus.textContent = '';
+
+        // Mark messages as read when opening the chat
+        fetch(`/mark_messages_as_read/${roomId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: '{{ current_admin.username }}'
+          })
+        }).then(() => {
+          // After marking as read, fetch the messages
+          fetch(`/get_room_messages/${roomId}`)
+            .then(res => res.json())
+            .then(messages => {
+              messages.forEach(msg => {
+                const currentUsername = '{{ current_admin.username }}';
+                let type = msg.sender === currentUsername ? "user" : "auto";
+                addMessage(msg.sender, msg.text, msg.created_at, type);
+              });
+              scrollMessagesToBottom();
+            });
+        });
+
+        socket.emit('join_room', {
+          username: '{{ current_admin.username }}',
+          room: roomId
+        });
+
+        rightPanel.classList.remove('hidden');
+      }
+
+
+      const chatTimes = document.querySelectorAll('.chat-time');
+
+      chatTimes.forEach(function (chatTimeElement) {
+        const timeString = chatTimeElement.getAttribute('data-time');
+
+        // Format the time using the previously defined function
+        const formattedTime = formatWhatsAppStyleTimeFromBackend(timeString);
+
+        // Insert the formatted time into the span
+        chatTimeElement.innerText = formattedTime;
+      });
+
+      // Add this function to your existing JavaScript
+      function updateChatList() {
+        fetch('/get_user_chat_updates')
+          .then(res => res.json())
+          .then(chats => {
+            const chatContainer = document.getElementById('chatItemsContainer');
+
+            if (chats.length > 0) {
+              chatContainer.innerHTML = '';
+
+              chats.forEach(chat => {
+                const chatDiv = document.createElement('div');
+                chatDiv.className = 'bg-white rounded-lg shadow-[0_0_15px_#d9e6f7] p-4 flex flex-col cursor-pointer';
+                chatDiv.dataset.roomId = chat.room_id;
+                chatDiv.dataset.userName = chat.user;
+                chatDiv.style.maxWidth = '100%';
+
+                const unreadBadge = chat.unread_count > 0 ?
+                  `<div class="bg-[#ef476f] text-white text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center unread-badge">
+                                ${chat.unread_count}
+                            </div>` : '';
+
+                const lastMessage = chat.last_message_read ?
+                  `${chat.last_sender}: ${chat.last_message}` :
+                  `<span class="text-black font-bold tracking-tight">${chat.last_sender}: ${chat.last_message}</span>`;
+
+                chatDiv.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center space-x-3">
+                                    <img alt="Avatar" class="rounded-full w-10 h-10 object-cover" height="40" 
+                                        src="{{url_for('static', filename = 'images/no-prof.png')}}" width="40" />
+                                    <div>
+                                        <h3 class="text-sm font-semibold text-[#1e293b] flex items-center space-x-1">
+                                            <span>${chat.user}</span>
+                                            <span class="text-xs text-[#3b82f6] font-normal">message</span>
+                                        </h3>
+                                        <p class="text-[10px] text-[#64748b] max-w-[280px] leading-[14px] mt-1">
+                                            ${lastMessage}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end space-y-1">
+                                    <span class="text-[10px] text-[#94a3b8]">
+                                        <span class="chat-time" data-time="${chat.last_time}">
+                                            ${formatWhatsAppStyleTimeFromBackend(chat.last_time)}
+                                        </span>
+                                    </span>
+                                    ${unreadBadge}
+                                </div>
+                            </div>
+                        `;
+
+                chatDiv.addEventListener('click', function () {
+                  openChatBox(chat.room_id, chat.user);
+                });
+
+                chatContainer.appendChild(chatDiv);
+              });
+            } else {
+              chatContainer.innerHTML = '<p>No active chats yet.</p>';
+            }
+          });
+      }
+
+      
+      setInterval(() => {
+        updateChatList();
+        updateTotalUnreadBadge();
+      }, 1000);
+
+      // Also call it immediately when page loads
+      document.addEventListener('DOMContentLoaded', () => {
+        updateTotalUnreadBadge();
+      });
+
+      // Also call it when the page loads
+      document.addEventListener('DOMContentLoaded', updateChatList);
+
+      function updateTotalUnreadBadge() {
+        fetch('/get_user_chat_updates')
+            .then(res => res.json())
+            .then(chats => {
+                // Count how many chats have at least one unread message
+                const unreadChatsCount = chats.filter(chat => chat.unread_count > 0).length;
+                
+                const badge = document.getElementById('totalUnreadBadge');
+                if (unreadChatsCount > 0) {
+                    if (!badge) {
+                        // Create badge if it doesn't exist
+                        const newBadge = document.createElement('span');
+                        newBadge.id = 'totalUnreadBadge';
+                        newBadge.className = 'message-count bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full';
+                        newBadge.textContent = unreadChatsCount;
+                        // Insert the badge where it should appear in your HTML
+                        document.querySelector('.badge-container').appendChild(newBadge);
+                    } else {
+                        // Update existing badge
+                        badge.textContent = unreadChatsCount;
+                    }
+                } else {
+                    // Remove badge if no unread chats
+                    if (badge) {
+                        badge.remove();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching unread count:', error);
+            });
+    }
+
+
+
+      function formatWhatsAppStyleTimeFromBackend(backendTimeString) {
+        const now = new Date();
+        const [day, monthAbbr, timePart] = backendTimeString.replace(',', '').split(' ');
+        const [hours, minutes] = timePart.split(':');
+
+        const monthMap = {
+          Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+          Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+        };
+
+        const parsedDate = new Date(
+          now.getFullYear(),
+          monthMap[monthAbbr],
+          parseInt(day),
+          parseInt(hours),
+          parseInt(minutes)
+        );
+
+        const diffMs = now - parsedDate;
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffMinutes < 1) {
+          return "Just now";
+        } else if (diffMinutes === 1) {
+          return "1 minute ago";
+        } else if (diffMinutes < 60) {
+          return `${diffMinutes} minutes ago`;
+        } else if (diffHours < 24 && now.getDate() === parsedDate.getDate()) {
+          return `Today at ${formatTime(parsedDate)}`;
+        } else if (diffDays === 1 || (now.getDate() - parsedDate.getDate() === 1)) {
+          return `Yesterday at ${formatTime(parsedDate)}`;
+        } else {
+          const options = { day: '2-digit', month: 'short' };
+          const datePart = parsedDate.toLocaleDateString('en-US', options);
+          return `${datePart} at ${formatTime(parsedDate)}`;
+        }
+      }
+
+      function formatTime(date) {
+        let hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? "pm" : "am";
+        hours = hours % 12;
+        hours = hours ? hours : 12; // 0 => 12
+        const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+        return hours + ":" + minutesStr + " " + ampm;
+      }
+
+      function parseBackendDateString(dateStr) {
+        // Split the string by comma (e.g., "27 Apr, 16:38")
+        const parts = dateStr.split(', ');
+        if (parts.length < 2) {
+          console.error("Invalid date string format:", dateStr);
+          return null;  // Return null or handle as necessary
+        }
+
+        const [day, time] = parts;
+        const [dayNum, monthStr] = day.split(' ');       // Split by space
+        const [hours, minutes] = time.split(':');        // Split hours and minutes
+
+        // Check if the `time` string is valid
+        if (!hours || !minutes) {
+          console.error("Invalid time format:", time);
+          return null;  // Return null or handle as necessary
+        }
+
+        // Mapping month names to month index
+        const monthMap = {
+          Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+          Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+        };
+
+        // Check if month is valid
+        if (!monthMap[monthStr]) {
+          console.error("Invalid month:", monthStr);
+          return null;  // Return null or handle as necessary
+        }
+
+        // Create a new Date object with current year, parsed month, day, hours, and minutes
+        const parsedDate = new Date(
+          new Date().getFullYear(),   // Use the current year
+          monthMap[monthStr],         // Get month index
+          parseInt(dayNum),           // Day as integer
+          parseInt(hours),            // Hour
+          parseInt(minutes)           // Minute
+        );
+
+        return parsedDate;
+      }
+
+      function addMessage(username, text, created_at, type, contentType = "text", fileData = null) {
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("max-w-[280px]", "rounded-lg", "px-4", "py-2");
+
+        // Time span element
+        const timeSpan = document.createElement("div");
+        timeSpan.className = "message-time";
+        console.log("Created At:", created_at);
+        // Parse the created_at string into a JavaScript Date object
+        const parsedDate = parseBackendDateString(created_at);
+
+        // Now format the date into the desired time format
+        timeSpan.textContent = formatTime(parsedDate);
+        console.log("Time:", timeSpan.textContent);
+
+        // Get current admin username
+        const currentAdminUsername = '{{ current_admin.username }}';
+        // If the username is the admin, display as "You", else display the actual username
+        const formattedUsername = username === currentAdminUsername ? 'You' : username;
+
+        // Create a div for the message header (username + line break)
+        const userNameDiv = document.createElement("div");
+        userNameDiv.classList.add("message-username");
+        userNameDiv.innerHTML = formattedUsername;
+
+        // Content type handling (Image, File, or Text)
+        const messageTextDiv = document.createElement("div");
+        messageTextDiv.classList.add("message-text");
+        messageTextDiv.style.wordBreak = "break-word";
+        messageTextDiv.style.overflowWrap = "break-word";
+
+        // Handle content based on type
+        if (contentType === "image") {
+          const container = document.createElement("div");
+          container.className = "message-image-container";
+          const img = document.createElement("img");
+          img.src = text;
+          img.alt = "Uploaded image";
+          img.className = "message-image";
+          container.appendChild(img);
+          messageTextDiv.appendChild(container);
+        } else if (contentType === "file") {
+          const fileDiv = document.createElement("div");
+          fileDiv.className = "message-file";
+          const icon = document.createElement("i");
+          icon.className = "fas fa-file-alt";
+          const span = document.createElement("span");
+          span.textContent = fileData ? `${fileData.name} (${fileData.size})` : text;
+          fileDiv.appendChild(icon);
+          fileDiv.appendChild(span);
+          messageTextDiv.appendChild(fileDiv);
+        } else {
+          // Format the text (replace semicolons with line breaks)
+          const formattedText = text;
+
+          // Add the formatted text and apply styles based on type
+          if (type === "user") {
+            userNameDiv.classList.add("underline", "text-[#3b82f6]", "font-bold");
+            userNameDiv.style.fontSize = "12px";
+            msgDiv.classList.add("bg-[#f1f5f9]", "text-[#475569]", "self-end");
+            msgDiv.style.fontSize = "12px";
+          } else if (type === "auto") {
+            userNameDiv.classList.add("underline", "text-white", "font-bold");
+            userNameDiv.style.fontSize = "12px";
+            msgDiv.classList.add("bg-[#3b82f6]", "text-white", "self-start");
+            msgDiv.style.fontSize = "12px";
+          }
+
+          // Add the formatted text into the message div
+          const textDiv = document.createElement("div");
+          textDiv.innerHTML = formattedText;  // This allows for formatted message content with line breaks
+          messageTextDiv.appendChild(textDiv);
+        }
+
+        // Add username, message, and time to the main message div
+        msgDiv.appendChild(userNameDiv);
+        msgDiv.appendChild(messageTextDiv);
+        msgDiv.appendChild(timeSpan);
+
+        // Append to the container and scroll to the bottom
+        messagesContainer.appendChild(msgDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+
+
+      function addSystemMessage(text) {
+        const sysDiv = document.createElement('div');
+        sysDiv.classList.add('system-msg', "bg-[#f1f5f9]", "text-[#808080]", "text-center");
+        sysDiv.style.fontSize = "12px";
+        sysDiv.innerText = text;
+        messagesContainer.appendChild(sysDiv);
+        scrollMessagesToBottom();
+      }
+
+      function clearMessages() {
+        messagesContainer.innerHTML = '';
+      }
+
+      function scrollMessagesToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      chatForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!activeRoomId) return;
+
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+
+        // 1. Emit real-time
+        socket.emit('send_message', {
+          username: '{{ current_admin.username }}',
+          room: activeRoomId,
+          message: msg
+        });
+
+        // 2. Save to Database
+        fetch('/save_message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: '{{ current_admin.username }}',
+            room_id: activeRoomId,
+            text: msg
+          })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status !== 'success') {
+              console.error('Failed to save message:', data.message);
+            }
+          })
+          .catch(err => console.error('Save message error:', err));
+
+        chatInput.value = '';
+        chatInput.focus();
+      });
+
+      // Socket Events
+      // Socket Events
+      socket.on('receive_message', function (data) {
+        const currentUsername = '{{ current_admin.username }}';
+
+        // If this message is for the currently open chat
+        if (data.room === activeRoomId) {
+          let type = data.username === currentUsername ? "user" : "auto";
+          addMessage(data.username, data.message, data.created_at, type);
+
+          // If message is from someone else, mark it as read immediately
+          if (data.username !== currentUsername) {
+            markMessageAsRead(data.room, currentUsername);
+          }
+        } else {
+          // For other chats, update the unread count
+          updateChatList();
+          updateTotalUnreadBadge(); // Add this line
+        }
+      });
+
+      function markMessageAsRead(roomId, username) {
+        return fetch(`/mark_messages_as_read/${roomId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: username
+          })
+        }).then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              updateChatList();
+              updateTotalUnreadBadge(); // Add this line
+            }
+          });
+      }
+
+      socket.on('join_room_announcement', function (data) {
+        if (data.room === activeRoomId && data.username !== '{{ current_admin.username }}') {
+          addSystemMessage(`${data.username} has joined the chat.`);
+        }
+      });
+
+      socket.on('leave_room_announcement', function (data) {
+        if (data.room === activeRoomId) {
+          addSystemMessage(`${data.username} has left the chat.`);
+        }
+      });
+
+      window.addEventListener('beforeunload', function () {
+        if (socket && activeRoomId) {
+          socket.emit('leave_room', {
+            username: '{{ current_admin.username }}',
+            room: activeRoomId
+          });
+        }
+      });
+
+      // Default Chat
+      function loadDefaultChat() {
+        activeRoomId = null;
+        clearMessages();
+        emptyChatText.style.display = "block";
+        chatInput.value = "";
+        rightPanel.classList.add("hidden");
+      }
+      loadDefaultChat();
+    });
+
+    // Close Chat
+    closeChatBtn.addEventListener('click', function () {
+      if (socket && activeRoomId) {
+        socket.emit('leave_room', {
+          username: '{{ current_admin.username }}',
+          room: activeRoomId
+        });
+      }
+      rightPanel.classList.add('hidden');
+      activeRoomId = null;
+      activeUserName = null;
+      clearMessages();
+      emptyChatText.style.display = 'block';
+      chatInput.value = '';
+    });
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Signup</title>
+</head>
+<body>
+    <h2>Admin Signup</h2>
+    <form method="post">
+        <input type="text" name="username" placeholder="Username" required><br><br>
+        <input type="email" name="email" placeholder="Email" required><br><br>
+        <input type="password" name="password" placeholder="Password" required><br><br>
+        
+        <label for="admin_type">Select Admin Type:</label><br>
+        <select name="admin_type" id="admin_type" required>
+            <option value="">--Select Admin Type--</option>
+            <option value="Billing Support">Billing Support</option>
+            <option value="Technical Support">Technical Support</option>
+            <option value="Account Manager">Account Manager</option>
+            <option value="Sales Rep">Sales Rep</option>
+            <option value="HR">HR</option>
+        </select><br><br>
+        
+        <button type="submit">Sign Up</button>
+    </form>
+    <p style="color:red;">{{ message }}</p>
+    <p>Already have an account? <a href="{{ url_for('admin_login') }}">Login</a></p>
+</body>
+</html>

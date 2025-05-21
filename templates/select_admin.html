@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        .admin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .admin-type {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            transition: background-color 0.3s;
+        }
+        .admin-type:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h2>Select an Admin to Chat With</h2>
+    <div class="admin-list">
+        {% if user_chats %}
+            {% for chat in user_chats %}
+                <a href="{{ url_for('user_chat_with_admin', admin_type=chat['user'],role='User') }}" class="admin-type">
+                    {{ chat['user'] }} : 
+                    {{ chat.last_message }} : 
+                    {{ chat.last_time }} : 
+                    {{ chat.last_sender }} : 
+                    {{ chat.last_message_read }} : 
+                    {% if chat['unread_count'] > 0 %}
+                        <span style="color: red;">({{ chat['unread_count'] }} unread)</span>
+                    {% endif %} 
+                </a>
+            {% endfor %}
+            
+        {% endif %}
+        <h2>Create</h2>
+            {% for admin_type in admin_types %}
+            <a href="{{ url_for('user_chat_with_admin', admin_type=admin_type, role='User') }}" class="admin-type">{{ admin_type }}</a>
+            {% endfor %}
+    </div>
+    <a href="{{ url_for('user_logout') }}">Logout</a>
+    
+    
+</body>
+</html>

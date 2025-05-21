@@ -1,0 +1,36 @@
+<!-- templates/admin_index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ current_admin.username }}!</h1>
+    <h2>Your Chats</h2>
+    {% if user_chats %}
+    {% for chat in user_chats %}
+        <ul>
+            <a href="{{ url_for('admin_chat_with_user', admin_type=current_admin['admin_type']) }}?user={{ chat['user'] }}">
+             
+                Chat with {{ chat['user'] }}
+                
+{{ chat.last_message }}
+{{ chat.last_time }}
+{{ chat.last_sender }}
+{{ chat.last_message_read }}
+
+                {% if chat['unread_count'] > 0 %}
+                    <span style="color: red;">({{ chat['unread_count'] }} unread)</span>
+                {% endif %}
+            </a>
+        </ul>
+    {% endfor %}
+
+    {% else %}
+        <p>No active chats yet.</p>
+    {% endif %}
+
+    <a href="{{ url_for('admin_logout') }}">Logout</a>
+</body>
+</html>
